@@ -14,7 +14,7 @@ pack_mcmeta = {
     'contents': \
 {
     "pack": {
-        "pack_format": '(int){pack_format}',
+        "pack_format": '(float){pack_format}',
         "description": "Adds {rp_num_discs} custom music discs"
     }
 }
