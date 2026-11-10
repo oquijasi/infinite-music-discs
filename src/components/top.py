@@ -18,6 +18,7 @@ from src.definitions import Assets, Constants, StyleProperties, StatusMessageDic
 from src.components.common import QRepolishMixin
 from src.components.settings_tab import SettingsList
 from src.components.tracks_tab import DiscList
+from src.components.loot_tab import LootList
 
 
 
@@ -435,11 +436,15 @@ class CentralWidget(QtWidgets.QWidget):
         self._discList = DiscList(self)
         self._discList.setSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.MinimumExpanding)
 
+        #loot options
+        self._lootTab = LootList(self)
+        self._lootTab.setSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.MinimumExpanding)
+
         #generation settings
         self._settingsList = SettingsList(self)
         self._settingsList.setSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.MinimumExpanding)
 
-        #tabs to switch between track list and settings
+        #tabs to switch between track list, loot, and settings
         tabs = QtWidgets.QTabWidget(self)
         tabs.setSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.MinimumExpanding)
 
@@ -452,6 +457,7 @@ class CentralWidget(QtWidgets.QWidget):
         tabBar = AnimatedTabBar(self)
         tabs.setTabBar(tabBar)
         tabs.addTab(self._discList, "    Tracks    ")
+        tabs.addTab(self._lootTab, "    Loot    ")
         tabs.addTab(self._settingsList, "    Settings    ")
         layout.addWidget(tabs, 0)
 
@@ -499,6 +505,14 @@ class CentralWidget(QtWidgets.QWidget):
     def generatePacks(self):
         entry_list = self._discList.getDiscEntries()
         settings = self._settingsList.getUserSettings()
+
+        # Add loot table settings
+        settings['loot_tmp_dir'] = self._lootTab.getTmpDir()
+
+        if self._lootTab.isChestLootEnabled():
+            settings['loot_tables'] = self._lootTab.getSelectedChestTables()
+        else:
+            settings['loot_tables'] = []
 
         #launch worker thread to generate packs
         #   FFmpeg conversion is slow, don't want to lock up UI
@@ -587,7 +601,7 @@ class GeneratePackWorker(QtCore.QObject):
         self._generator.create_tmp()
         self._generator.convert_all_to_ogg(self._entry_list, self._settings, self.emit_update_progress)
 
-        #post-process tracks individually       
+        #post-process tracks individually
         for e in self._entry_list.entries:
             # e.track_file = self._generator.convert_to_ogg(e, self._settings)
             e.length_s = self._generator.get_track_length(e)
@@ -606,5 +620,3 @@ class GeneratePackWorker(QtCore.QObject):
         #finish up and return to generate()
         self._generator.cleanup_tmp()
         print("Successfully generated datapack and resourcepack!")
-
-

@@ -8,6 +8,7 @@ from typing import Union, TextIO
 
 import os
 import json
+import copy
 import shutil
 import zipfile
 
@@ -60,6 +61,9 @@ class GeneratorV2(VirtualGenerator):
 
                 creeper_json = dp.get_creeper_json(creeper_music_entries)
                 self.write_single(creeper_json, locals())
+
+                #Copy selected chest loot tables
+                self.copy_chest_loot_tables(user_settings, dp, locals())
 
                 #write other datapack files
                 for dp_file in dp.contents:
@@ -170,7 +174,65 @@ class GeneratorV2(VirtualGenerator):
         if use_zip:
             self.zip_pack(resourcepack_name)
 
+    def copy_chest_loot_tables(self, user_settings, dp, fmt_dict):
 
+        tmp_dir = user_settings.get('loot_tmp_dir', '')
+        selected_tables = user_settings.get('loot_tables', [])
+
+        if not tmp_dir or not os.path.isdir(tmp_dir) or not selected_tables:
+            return
+
+        #only datapack versions with music_discs.json (v3.4+) provide this pool
+        #format it once here, so the chest tables themselves are never run through str.format
+        get_chest_entry = getattr(dp, 'get_chest_music_entry_base', None)
+        music_pool = self.fmt_json(get_chest_entry(), fmt_dict) if get_chest_entry else None
+
+        copied = 0
+
+        for table in selected_tables:
+            parts = table.replace('\\', '/').split('/')
+
+            #find the extracted file (same root search as before)
+            src = None
+            roots = [
+                ('data', 'minecraft', 'loot_tables', 'chests'),
+                ('data', 'minecraft', 'loot_table', 'chests'),
+                ('minecraft', 'loot_tables', 'chests'),
+                ('minecraft', 'loot_table', 'chests')
+            ]
+
+            for root in roots:
+                candidate = os.path.join(tmp_dir, *root, *parts)
+                if os.path.isfile(candidate):
+                    src = candidate
+                    break
+
+            if src is None:
+                print(f"ERROR: Could not find source file: {table}")
+                continue
+
+            #destination mirrors the path inside the extracted jar
+            dst = os.path.relpath(src, tmp_dir)
+            os.makedirs(os.path.dirname(dst), exist_ok=True)
+
+            if music_pool is None:
+                shutil.copy2(src, dst)
+            else:
+                self.write_chest_table_with_discs(src, dst, music_pool)
+
+            copied += 1
+
+        print(f"Successfully copied {copied}/{len(selected_tables)} loot tables.")
+
+    #copy a chest loot table, appending the custom music disc pool to its pools
+    def write_chest_table_with_discs(self, src: str, dst: str, music_pool: dict):
+        with open(src, 'r', encoding='utf-8') as f:
+            table = json.load(f)
+
+        table.setdefault('pools', []).append(copy.deepcopy(music_pool))
+
+        with open(dst, 'w', encoding='utf-8') as f:
+            json.dump(table, f, indent=4)
 
     def copy_pack_png(self, pack_name: str, user_settings: dict):
         try:

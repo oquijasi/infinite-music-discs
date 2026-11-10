@@ -50,6 +50,17 @@ creeper_music_entry_base = {
     'value': '{pack_name}:music_discs'
 }
 
+# appended to chest loot tables by the generator
+chest_music_entry_base = {
+    'entries': [
+        {
+            'type': 'minecraft:loot_table',
+            'value': '{pack_name}:music_discs'
+        }
+    ],
+    'rolls': 1
+}
+
 # appended once per disc; these end up in music_discs.json
 creeper_music_entry_custom = {
     'type': 'minecraft:item',
@@ -94,6 +105,9 @@ class DatapackContents_v3p4(DatapackContents_v3p3):
 
     def get_creeper_music_entry_base(self):
         return creeper_music_entry_base
+
+    def get_chest_music_entry_base(self):
+        return chest_music_entry_base
 
     def get_creeper_music_entry_custom(self):
         return creeper_music_entry_custom
