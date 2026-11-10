@@ -53,7 +53,7 @@ class GeneratorV2(VirtualGenerator):
                 #generate JSON for music disc entries, then reach into dict and add them
                 #  to the drop pool manually
                 creeper_music_entries = []
-                creeper_music_entries.append(dp.get_creeper_music_entry_base())
+                creeper_music_entries.append(self.fmt_json(dp.get_creeper_music_entry_base(), locals()))
 
                 for entry in entry_list.entries:
                     creeper_music_entries.append(self.fmt_json(dp.get_creeper_music_entry_custom(), locals()))
