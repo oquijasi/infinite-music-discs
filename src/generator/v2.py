@@ -49,16 +49,23 @@ class GeneratorV2(VirtualGenerator):
             os.makedirs(datapack_name)
 
             with self.set_directory(datapack_name):
-                #write 'creeper.json'
-                #generate JSON for music disc entries, then reach into dict and add them
-                #  to the drop pool manually
-                creeper_music_entries = []
-                creeper_music_entries.append(dp.get_creeper_music_entry_base())
+                #write 'music_discs.json'
+                #one loot table entry per custom disc
+                custom_disc_entries = []
 
                 for entry in entry_list.entries:
-                    creeper_music_entries.append(self.fmt_json(dp.get_creeper_music_entry_custom(), locals()))
+                    custom_disc_entries.append(self.fmt_json(dp.get_custom_disc_entry(), locals()))
 
-                creeper_json = dp.get_creeper_json(creeper_music_entries)
+                custom_discs_loot_table = dp.get_custom_discs_loot_table(custom_disc_entries)
+                self.write_single(custom_discs_loot_table, locals())
+
+                #write 'creeper.json'
+                #vanilla discs stay inline, custom discs are referenced via loot table
+                #the reference entry contains {dp_num_discs} and {datapack_name},
+                #  so it has to be formatted before it is placed in the drop pool
+                custom_discs_ref_entry = self.fmt_json(dp.get_creeper_custom_discs_ref_entry(), locals())
+
+                creeper_json = dp.get_creeper_json(custom_discs_ref_entry)
                 self.write_single(creeper_json, locals())
 
                 #write other datapack files

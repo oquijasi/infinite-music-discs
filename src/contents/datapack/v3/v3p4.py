@@ -23,16 +23,16 @@ creeper_normal_entries = [
     }
 ]
 
-creeper_music_entries = []
-
-creeper_music_entry_base = {
+# vanilla discs: stays inline in creeper.json (not formatted by the generator)
+creeper_vanilla_discs_entry = {
     'type': 'minecraft:tag',
     'weight': 1,
     'items': '#minecraft:creeper_drop_music_discs',
     'expand': True
 }
 
-creeper_music_entry_custom = {
+# one per custom disc; these end up in music_discs.json
+custom_disc_entry = {
     'type': 'minecraft:item',
     'weight': 1,
     'name': 'minecraft:music_disc_11',
@@ -45,6 +45,7 @@ creeper_music_entry_custom = {
     }]
 }
 
+# entries of the second pool are set by get_creeper_json
 creeper_json = {
     'path': ['data', 'minecraft', 'loot_table', 'entities', 'creeper.json'],
     'repeat': 'single',
@@ -53,7 +54,7 @@ creeper_json = {
         'type': 'minecraft:entity',
         'pools': [
             {'rolls': 1, 'entries': creeper_normal_entries},
-            {'rolls': 1, 'entries': creeper_music_entries, 'condition': {
+            {'rolls': 1, 'entries': [], 'condition': {
                 'type': 'minecraft:entity_properties',
                 'entity': 'attacker',
                 'predicate': {'minecraft:entity_type': '#minecraft:skeletons'}
@@ -72,15 +73,16 @@ class DatapackContents_v3p4(DatapackContents_v3p3):
     def add_contents(self):
         super().add_contents()
 
-        #creeper.json
-    def get_creeper_music_entry_base(self):
-        return creeper_music_entry_base
+    #creeper.json and music_discs.json
+    def get_creeper_vanilla_discs_entry(self):
+        return creeper_vanilla_discs_entry
 
-    def get_creeper_music_entry_custom(self):
-        return creeper_music_entry_custom
+    def get_custom_disc_entry(self):
+        return custom_disc_entry
 
-    def get_creeper_json(self, creeper_music_entries: list):
-        #reach inside and set the music disc entries manually since it's
-        #  hard to elegantly generate this file
-        creeper_json['contents']['pools'][1]['entries'] = creeper_music_entries
+    def get_creeper_json(self, custom_discs_ref_entry: dict):
+        creeper_json['contents']['pools'][1]['entries'] = [
+            self.get_creeper_vanilla_discs_entry(),
+            custom_discs_ref_entry
+        ]
         return creeper_json
