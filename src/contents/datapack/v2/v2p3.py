@@ -11,6 +11,16 @@ creeper_custom_discs_ref_entry = {
     'value': '{datapack_name}:music_discs'
 }
 
+# pool appended to vanilla chest loot tables by the generator
+chest_music_entry_base = {
+    'rolls': 1,
+    'entries': [
+        {
+            'type': 'minecraft:loot_table',
+            'value': '{datapack_name}:music_discs'
+        }
+    ]
+}
 
 # custom disc loot table entry (music_discs.json)
 # custom_model_data must be specially encoded - datapack formatter
@@ -100,5 +110,8 @@ class DatapackContents_v2p3(DatapackContents_v2p2):
     #music_discs.json
     def get_custom_disc_entry(self):
         return custom_disc_entry
+
+    def get_chest_music_entry_base(self):
+        return chest_music_entry_base
 
 
