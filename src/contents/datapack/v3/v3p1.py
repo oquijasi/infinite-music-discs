@@ -20,7 +20,7 @@ execute at @s run summon item ~ ~ ~ {{Item:{{id:"minecraft:music_disc_11", Count
 
 
 # creeper loot table
-creeper_music_entry_custom = {
+custom_disc_entry = {
     'type':'minecraft:item',
     'weight':1,
     'name':'minecraft:music_disc_11',
@@ -49,5 +49,5 @@ class DatapackContents_v3p1(DatapackContents_v3p0):
 
         self.disc_give = disc_give
 
-    def get_creeper_music_entry_custom(self):
-        return creeper_music_entry_custom
+    def get_custom_disc_entry(self):
+        return custom_disc_entry
