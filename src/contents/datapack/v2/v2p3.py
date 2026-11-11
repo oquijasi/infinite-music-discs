@@ -5,13 +5,18 @@
 
 from src.contents.datapack.v2.v2p2 import DatapackContents_v2p2
 
+creeper_custom_discs_ref_entry = {
+    'type': 'minecraft:loot_table',
+    'weight': '(int){dp_num_discs}',
+    'value': '{datapack_name}:music_discs'
+}
 
 
-# creeper loot table
+# custom disc loot table entry (music_discs.json)
 # custom_model_data must be specially encoded - datapack formatter
 #   will see the "(int)" prefix and cast it to an integer
 #   after string formatting
-creeper_music_entry_custom = {
+custom_disc_entry = {
     'type':'minecraft:item',
     'weight':1,
     'name':'minecraft:music_disc_11',
@@ -89,8 +94,11 @@ class DatapackContents_v2p3(DatapackContents_v2p2):
         self.pre_play = pre_play
         self.set_disc_track = set_disc_track
 
-    #creeper.json
-    def get_creeper_music_entry_custom(self):
-        return creeper_music_entry_custom
+    def get_creeper_custom_discs_ref_entry(self):
+        return creeper_custom_discs_ref_entry
+
+    #music_discs.json
+    def get_custom_disc_entry(self):
+        return custom_disc_entry
 
 
