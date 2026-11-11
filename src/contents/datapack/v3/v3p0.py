@@ -23,20 +23,42 @@ pack_mcmeta = {
 }
 }
 
-# creeper loot table
-# custom_model_data must be specially encoded - datapack formatter
-#   will see the "(int)" prefix and cast it to an integer
-#   after string formatting
-creeper_music_entries = []
+# loot table containing every custom disc (data/<pack_name>/loot_table/music_discs.json)
+# entries are filled in by the generator, one per disc
+custom_discs_loot_table = {
+    'path': ['data', '{pack_name}', 'loot_table', 'music_discs.json'],
+    'repeat': 'single',
+    'format_contents': False,
+    'contents': \
+{
+    'type': 'minecraft:generic',
+    'pools': [{'rolls': 1, 'entries': []}]
+}
+}
 
-creeper_music_entry_base = {
+# vanilla discs: stays inline in creeper.json (not formatted by the generator)
+creeper_vanilla_discs_entry = {
     'type': 'minecraft:tag',
     'weight': 1,
     'name': 'minecraft:creeper_drop_music_discs',
     'expand': True
 }
 
-creeper_music_entry_custom = {
+# single entry in creeper.json that points at the custom disc loot table
+# weight = number of custom discs, so each custom disc is exactly as likely
+#   as each vanilla disc (the vanilla tag expands to one weight-1 entry per disc)
+# loot_table entries use 'value' (not 'name') since 1.20.5
+creeper_custom_discs_ref_entry = {
+    'type': 'minecraft:loot_table',
+    'weight': '(int){dp_num_discs}',
+    'value': '{pack_name}:music_discs'
+}
+
+# one per custom disc; these end up in music_discs.json
+# custom_model_data must be specially encoded - datapack formatter
+#   will see the "(int)" prefix and cast it to an integer
+#   after string formatting
+custom_disc_entry = {
     'type':'minecraft:item',
     'weight':1,
     'name':'minecraft:music_disc_11',
@@ -90,7 +112,7 @@ creeper_json = {
     'type':'minecraft:entity',
     'pools':[
         {'rolls':1, 'entries':creeper_normal_entries},
-        {'rolls':1, 'entries':creeper_music_entries, 'conditions':[{
+        {'rolls':1, 'entries':[], 'conditions':[{
             'condition':'minecraft:entity_properties',
             'predicate':{'type':'#minecraft:skeletons'},
             'entity':'attacker'
@@ -200,17 +222,25 @@ class DatapackContents_v3p0(VirtualPackContents):
     def version_str(self):
         return f"v{self.version_major}.{self.version_minor}"
 
-    #creeper.json
-    def get_creeper_music_entry_base(self):
-        return creeper_music_entry_base
+    #creeper.json and music_discs.json
+    def get_creeper_vanilla_discs_entry(self):
+        return creeper_vanilla_discs_entry
 
-    def get_creeper_music_entry_custom(self):
-        return creeper_music_entry_custom
+    def get_creeper_custom_discs_ref_entry(self):
+        return creeper_custom_discs_ref_entry
 
-    def get_creeper_json(self, creeper_music_entries: list):
-        #reach inside and set the music disc entries manually since it's
-        #  hard to elegantly generate this file
-        creeper_json['contents']['pools'][1]['entries'] = creeper_music_entries
+    def get_custom_disc_entry(self):
+        return custom_disc_entry
+
+    def get_custom_discs_loot_table(self, custom_disc_entries: list):
+        custom_discs_loot_table['contents']['pools'][0]['entries'] = custom_disc_entries
+        return custom_discs_loot_table
+
+    def get_creeper_json(self, custom_discs_ref_entry: dict):
+        creeper_json['contents']['pools'][1]['entries'] = [
+            self.get_creeper_vanilla_discs_entry(),
+            custom_discs_ref_entry
+        ]
         return creeper_json
 
 
